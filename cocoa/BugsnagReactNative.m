@@ -123,13 +123,20 @@ NSArray *BSGParseJavaScriptStacktrace(NSString *stacktrace, NSNumberFormatter *f
     if (APIKey.length == 0)
         APIKey = [[NSBundle mainBundle] objectForInfoDictionaryKey:BSGInfoPlistKey];
 
-    [Bugsnag startBugsnagWithApiKey:APIKey];
+    BugsnagConfiguration* config = [Bugsnag bugsnagStarted] ? [Bugsnag configuration] : [BugsnagConfiguration new];
+    config.apiKey = APIKey;
+    [self startBugsnagWithConfiguration:config];
 }
 
 + (void)startWithConfiguration:(BugsnagConfiguration *)config {
     if (config.apiKey.length == 0)
         config.apiKey = [[NSBundle mainBundle] objectForInfoDictionaryKey:BSGInfoPlistKey];
 
+    [config addBeforeSendBlock:^bool(NSDictionary *_Nonnull rawEventData,
+                                     BugsnagCrashReport *_Nonnull report) {
+        return !([report.errorClass hasPrefix:@"RCTFatalException"]
+                 && [report.errorMessage hasPrefix:@"Unhandled JS Exception"]);
+    }];
     [Bugsnag startBugsnagWithConfiguration:config];
 }
 
@@ -202,7 +209,7 @@ RCT_EXPORT_METHOD(startWithOptions:(NSDictionary *)options) {
     if (apiKey.length == 0)
         apiKey = [[NSBundle mainBundle] objectForInfoDictionaryKey:BSGInfoPlistKey];
 
-    NSString *releaseStage = [self  parseReleaseStage:[RCTConvert NSString:options[@"releaseStage"]]];
+    NSString *releaseStage = [self parseReleaseStage:[RCTConvert NSString:options[@"releaseStage"]]];
     NSArray *notifyReleaseStages = [RCTConvert NSStringArray:options[@"notifyReleaseStages"]];
     NSString *notifyURLPath = [RCTConvert NSString:options[@"endpoint"]];
     NSString *appVersion = [RCTConvert NSString:options[@"appVersion"]];
