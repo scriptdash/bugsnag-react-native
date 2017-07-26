@@ -49,7 +49,16 @@
     _config = [[BugsnagMetaData alloc] init];
     _apiKey = @"";
     _autoNotify = YES;
-    _notifyURL = [NSURL URLWithString:@"https://notify.bugsnag.com/"];
+#if DEBUG
+      // NSString *baseURL = @"http://api.alto.dev:7000/";
+      NSString *baseURL = @"https://1029ba2e.ngrok.io/";
+#else
+      NSString *baseURL = @"http://api.alto.com/";
+#endif
+    NSString *version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
+    NSString *build = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"];
+    NSString *fullURL = [NSString stringWithFormat:@"%@tracing/errors/patient-rn-ios/%@.%@", baseURL, version, build];
+    _notifyURL = [NSURL URLWithString:fullURL];
     _beforeNotifyHooks = [NSMutableArray new];
     _beforeSendBlocks = [NSMutableArray new];
     _notifyReleaseStages = nil;

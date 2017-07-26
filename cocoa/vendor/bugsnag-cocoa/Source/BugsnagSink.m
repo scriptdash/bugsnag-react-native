@@ -93,7 +93,7 @@
             [bugsnagReports addObject:bugsnagReport];
         }
     }
-    
+
     if (bugsnagReports.count == 0) {
         if (onCompletion) {
             onCompletion(reports, YES, nil);
@@ -133,7 +133,14 @@
        onCompletion:(KSCrashReportFilterCompletion) onCompletion {
     @try {
         NSError *error = nil;
-        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:reportData
+        NSData *jsonReportData = [NSJSONSerialization dataWithJSONObject:reportData
+                                                           options:NSJSONWritingPrettyPrinted
+                                                             error:&error];
+
+        NSDictionary *altoErrorData = @{
+                                        @"message": [[NSString alloc] initWithData:jsonReportData encoding:NSUTF8StringEncoding],
+                                        };
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:altoErrorData
                                                            options:NSJSONWritingPrettyPrinted
                                                              error:&error];
 
@@ -186,15 +193,15 @@
     NSMutableDictionary* data = [[NSMutableDictionary alloc] init];
     BSGDictSetSafeObject(data, [Bugsnag configuration].apiKey, @"apiKey");
     BSGDictSetSafeObject(data, [Bugsnag notifier].details, @"notifier");
-    
+
     NSMutableArray* formatted = [[NSMutableArray alloc] initWithCapacity:[reports count]];
-    
+
     for (BugsnagCrashReport* report in reports) {
         BSGArrayAddSafeObject(formatted, [report serializableValueWithTopLevelData:data]);
     }
 
     BSGDictSetSafeObject(data, formatted, @"events");
-    
+
     return data;
 }
 
