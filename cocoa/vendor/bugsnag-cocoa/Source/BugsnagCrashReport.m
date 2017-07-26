@@ -94,7 +94,7 @@ NSDictionary *BSGParseDevice(NSDictionary *report) {
     BSGDictSetSafeObject(device, system[@"system_version"], @"osVersion");
     BSGDictSetSafeObject(device, system[@"memory"][@"usable"],
                          @"totalMemory");
-    
+
     return device;
 }
 
@@ -113,7 +113,7 @@ NSDictionary *BSGParseApp(NSDictionary *report, NSString *appVersion) {
         BSGDictSetSafeObject(app, system[@"CFBundleShortVersionString"],
                              @"version");
     }
-    
+
     return app;
 }
 
@@ -133,7 +133,7 @@ NSDictionary *BSGParseAppState(NSDictionary *report) {
     BSGDictSetSafeObject(appState, appStats[@"application_in_foreground"],
                          @"inForeground");
     BSGDictSetSafeObject(appState, appStats, @"stats");
-    
+
     return appState;
 }
 
@@ -338,37 +338,40 @@ static NSString *const DEFAULT_EXCEPTION_TYPE = @"cocoa";
   NSMutableDictionary *event = [NSMutableDictionary dictionary];
   NSMutableDictionary *metaData = [[self metaData] mutableCopy];
 
-  if (self.customException) {
-      BSGDictSetSafeObject(event, @[self.customException], @"exceptions");
-      BSGDictSetSafeObject(event,
-                           [self serializeThreadsWithException:nil],
-                           @"threads");
-  } else {
-      NSMutableDictionary *exception = [NSMutableDictionary dictionary];
-      BSGDictSetSafeObject(exception, [self errorClass], @"errorClass");
-      BSGDictInsertIfNotNil(exception, [self errorMessage], @"message");
-      BSGDictInsertIfNotNil(exception, DEFAULT_EXCEPTION_TYPE, @"type");
-      BSGDictSetSafeObject(event, @[exception], @"exceptions");
+  // dkan: remove to reduce size to under our message limit
+  // if (self.customException) {
+  //     BSGDictSetSafeObject(event, @[self.customException], @"exceptions");
+  //     BSGDictSetSafeObject(event,
+  //                          [self serializeThreadsWithException:nil],
+  //                          @"threads");
+  // } else {
+  //     NSMutableDictionary *exception = [NSMutableDictionary dictionary];
+  //     BSGDictSetSafeObject(exception, [self errorClass], @"errorClass");
+  //     BSGDictInsertIfNotNil(exception, [self errorMessage], @"message");
+  //     BSGDictInsertIfNotNil(exception, DEFAULT_EXCEPTION_TYPE, @"type");
+  //     BSGDictSetSafeObject(event, @[exception], @"exceptions");
 
-      // HACK: For the Unity Notifier. We don't include ObjectiveC exceptions or
-      // threads
-      // if this is an exception from Unity-land.
-      NSDictionary *unityReport = metaData[@"_bugsnag_unity_exception"];
-      if (unityReport) {
-          BSGDictSetSafeObject(data, unityReport[@"notifier"], @"notifier");
-          BSGDictSetSafeObject(exception, unityReport[@"stacktrace"], @"stacktrace");
-          [metaData removeObjectForKey:@"_bugsnag_unity_exception"];
-          return event;
-      }
+  //     // HACK: For the Unity Notifier. We don't include ObjectiveC exceptions or
+  //     // threads
+  //     // if this is an exception from Unity-land.
+  //     NSDictionary *unityReport = metaData[@"_bugsnag_unity_exception"];
+  //     if (unityReport) {
+  //         BSGDictSetSafeObject(data, unityReport[@"notifier"], @"notifier");
+  //         BSGDictSetSafeObject(exception, unityReport[@"stacktrace"], @"stacktrace");
+  //         [metaData removeObjectForKey:@"_bugsnag_unity_exception"];
+  //         return event;
+  //     }
 
-      BSGDictSetSafeObject(event,
-                           [self serializeThreadsWithException:exception],
-                           @"threads");
-  }
+  //     BSGDictSetSafeObject(event,
+  //                          [self serializeThreadsWithException:exception],
+  //                          @"threads");
+  // }
+
   // Build Event
   BSGDictInsertIfNotNil(event, [self dsymUUID], @"dsymUUID");
   BSGDictSetSafeObject(event, BSGFormatSeverity(self.severity), @"severity");
-  BSGDictSetSafeObject(event, [self breadcrumbs], @"breadcrumbs");
+  // dkan: also remove breadcrumbs
+  // BSGDictSetSafeObject(event, [self breadcrumbs], @"breadcrumbs");
   BSGDictSetSafeObject(event, @"3", @"payloadVersion");
   BSGDictSetSafeObject(event, metaData, @"metaData");
   BSGDictSetSafeObject(event, [self deviceState], @"deviceState");
